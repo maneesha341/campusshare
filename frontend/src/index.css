@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-paper text-ink font-body;
+}
+
+h1, h2, h3 {
+  @apply font-display;
+}
+
+/* Subtle notebook dot-grid texture, used behind hero/section backgrounds */
+.paper-grid {
+  background-image: radial-gradient(#C6C3FF 1.5px, transparent 1.5px);
+  background-size: 22px 22px;
+}
+
+/* Signature element: a hand-stuck sticky note / price tag.
+   Used for prices, badges, and hero callouts throughout the app. */
+.sticker {
+  box-shadow: 0 2px 0 rgba(33, 31, 53, 0.9), 0 6px 14px rgba(33, 31, 53, 0.12);
+  transform: rotate(var(--tilt, -3deg));
+}
+
+.sticker:hover {
+  transform: rotate(0deg) translateY(-2px);
+}
+
+/* Torn-paper divider between sections */
+.torn-edge {
+  position: relative;
+}
+
+.torn-edge::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 14px;
+  background: linear-gradient(115deg, transparent 50%, #FFFCF5 50%) 0 0 / 24px 100%,
+    linear-gradient(65deg, transparent 50%, #FFFCF5 50%) 0 0 / 24px 100%;
+  background-repeat: repeat-x;
+}
+
+/* Smooth focus ring for accessibility, in brand color rather than default blue */
+:focus-visible {
+  outline: 2px solid #5B54F0;
+  outline-offset: 2px;
+}
