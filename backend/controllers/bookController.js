@@ -1,5 +1,20 @@
 const asyncHandler = require('express-async-handler');
 const Book = require('../models/Book');
+const Image = require('../models/Image');
+
+// Saves uploaded files into MongoDB as Image documents and returns their
+// public URLs (/api/images/:id) to store on the Book document.
+const saveImages = async (files = []) => {
+  const urls = [];
+  for (const file of files) {
+    const image = await Image.create({ data: file.buffer, contentType: file.mimetype });
+    urls.push(`/api/images/${image._id}`);
+  }
+  return urls;
+};
+
+// Extracts the Image document _id from a stored "/api/images/:id" path.
+const imageIdFromUrl = (url) => url.split('/').pop();
 
 // @desc    Create a new book listing
 // @route   POST /api/books
@@ -12,7 +27,7 @@ const createBook = asyncHandler(async (req, res) => {
     throw new Error('Please fill all required fields');
   }
 
-  const images = (req.files || []).map((f) => `/uploads/${f.filename}`);
+  const images = await saveImages(req.files);
 
   const book = await Book.create({
     seller: req.user._id,
@@ -127,7 +142,8 @@ const updateBook = asyncHandler(async (req, res) => {
   });
 
   if (req.files && req.files.length > 0) {
-    book.images = [...book.images, ...req.files.map((f) => `/uploads/${f.filename}`)];
+    const newImages = await saveImages(req.files);
+    book.images = [...book.images, ...newImages];
   }
 
   const updated = await book.save();
@@ -146,6 +162,12 @@ const deleteBook = asyncHandler(async (req, res) => {
   if (book.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
     res.status(403);
     throw new Error('Not authorized to delete this listing');
+  }
+  // Clean up this book's images from MongoDB too — otherwise every deleted
+  // listing leaves orphaned Image documents quietly eating your Atlas quota.
+  const imageIds = (book.images || []).map(imageIdFromUrl);
+  if (imageIds.length > 0) {
+    await Image.deleteMany({ _id: { $in: imageIds } });
   }
   await book.deleteOne();
   res.json({ message: 'Listing removed' });
